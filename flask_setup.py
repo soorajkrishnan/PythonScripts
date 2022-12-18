@@ -98,6 +98,37 @@ flasgger
 """
 
 
+def create_module_folder_and_template(
+    module: str, modules_dir: str, template_dir: str
+) -> None:
+    """
+    Create a module folder and template folder with the given name in the specified directories.
+
+    Parameters:
+    module (str): The name of the module folder and template folder to be created.
+    modules_dir (str): The directory where the module folder should be created.
+    template_dir (str): The directory where the template folder should be created.
+
+    Returns:
+    None
+    """
+    module_dir = f"{modules_dir}/{module}"
+    if not os.path.exists(module_dir):
+        os.makedirs(module_dir)
+        with open(f"{module_dir}/{module}.py", "w", encoding="utf-8") as file:
+            file.write("from flask import Blueprint")
+            file.write("\n")
+            file.write(
+                f"{module}_bp = Blueprint('{module}', __name__,url_prefix='{module}')"
+            )
+
+        print(f"Created {module} folder")
+
+    template_dirs = f"{template_dir}/{module}"
+    if not os.path.exists(template_dirs):
+        os.makedirs(template_dirs)
+
+
 def init_project(project_name, modules=None):
     """Function to create folders and files
 
@@ -105,8 +136,6 @@ def init_project(project_name, modules=None):
         project_name (str): project name
         modules (list[str]): Name of submodules
     """
-    if modules is None:
-        modules = []
     # Create project root directory
     root_dir = f"{project_name}"
     if not os.path.exists(root_dir):
@@ -148,22 +177,7 @@ def init_project(project_name, modules=None):
 
     # Iterate over the modules and create them in the given directory
     for module in modules:
-        module_dir = f"{modules_dir}/{module}"
-        if not os.path.exists(module_dir):
-            os.makedirs(module_dir)
-            with open(f"{module_dir}/{module}.py", "w", encoding="utf-8") as file:
-                file.write("from flask import Blueprint")
-                file.write("\n")
-                file.write(
-                    f"{module}_bp = Blueprint('{module}', __name__,url_prefix='{module}')"
-                )
-
-            print(f"Created {module} folder")
-
-        template_dirs = f"{template_dir}/{module}"
-        if not os.path.exists(template_dirs):
-            os.makedirs(template_dirs)
-
+        create_module_folder_and_template(module, modules_dir, template_dir)
     # Create static directory
     static_dir = f"{root_dir}/static"
     if not os.path.exists(static_dir):
@@ -173,7 +187,7 @@ def init_project(project_name, modules=None):
     # Add blueprints to application.py
     with open(application_file, "r", encoding="utf-8") as file:
         # Read the file into a list of lines
-        lines = f.readlines()
+        lines = file.readlines()
 
     # Check if the lines are not already present in the file
     lines_present = all(
@@ -210,19 +224,18 @@ def remove_project(directory):
     # Check if the directory exists
     if not os.path.exists(directory):
         raise ValueError(f"Error: directory {directory} does not exist")
+    # Confirm with the user before deleting the directory
+    confirm = input(
+        f"Are you sure you want to delete the directory {directory} and all its contents? [y/N] "
+    )
+    if confirm.lower() == "y" or confirm.lower() == "yes":
+        shutil.rmtree(directory)
+        print(f"Directory {directory} successfully deleted")
+    elif confirm.lower == "n" or confirm.lower() == "no":
+        print(f"Directory {directory} was not deleted")
     else:
-        # Confirm with the user before deleting the directory
-        confirm = input(
-            f"Are you sure you want to delete the directory {directory} and all its contents? [y/N] "
-        )
-        if confirm.lower() == "y" or confirm.lower() == "yes":
-            shutil.rmtree(directory)
-            print(f"Directory {directory} successfully deleted")
-        elif confirm.lower == "n" or confirm.lower() == "no":
-            print(f"Directory {directory} was not deleted")
-        else:
-            print("Invalid response")
-            sys.exit(0)
+        print("Invalid response")
+        sys.exit(0)
 
 
 def create_utility_files(project_name):
@@ -297,7 +310,7 @@ def main():
         if args.init:
             # Call the initialize_directory function with the given directory name
             project_path = os.path.join(args.path, args.init)
-            init_project(project_path)
+            init_project(project_path, [])
             create_utility_files(project_path)
 
         # Check if the remove argument is present
