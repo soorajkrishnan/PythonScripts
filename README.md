@@ -8,6 +8,7 @@ project_name
 ├── db.py
 ├── requirements.txt
 ├── templates
+├── static
 └── modules
 ```
 
@@ -64,6 +65,7 @@ my_project
 ├── db.py
 ├── requirements.txt
 ├── templates
+├── static
 └── modules
     ├── users
     │   └── users.py
